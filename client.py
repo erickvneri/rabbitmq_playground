@@ -1,4 +1,9 @@
+from datetime import datetime
+from uuid import uuid1
+
+# locals
 from connection import connection
+from message import Message
 
 TOPIC = dict(private="changelog.private", public="changelog.public")
 
@@ -26,10 +31,29 @@ def main():
     channel = client.channel()
 
     channel.exchange_declare(exchange=TOPIC["private"], exchange_type="fanout")
-    message = "Hello world!"
+    message = Message(
+        created_at=datetime.now(),
+        reference_id=uuid1(),
+        data={
+            "action": "add",
+            "target": "entity",
+            "entity": "table_a",
+            "reporter": uuid1(),
+            "data": [
+                {"id": uuid1(), "name": "sample_entity_0"},
+                {"id": uuid1(), "name": "sample_entity_1"},
+                {"id": uuid1(), "name": "sample_entity_2"},
+                {"id": uuid1(), "name": "sample_entity_3"},
+                {"id": uuid1(), "name": "sample_entity_4"},
+                {"id": uuid1(), "name": "sample_entity_5"},
+            ],
+        },
+    )
 
     print(f"publishing message at {TOPIC['private']}...")
-    channel.basic_publish(exchange=TOPIC["private"], routing_key="", body=message)
+    channel.basic_publish(
+        exchange=TOPIC["private"], routing_key="", body=message.encode()
+    )
 
     init_server(channel)
 
